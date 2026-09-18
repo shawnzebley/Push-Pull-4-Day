@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Haunted Push/Pull</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#050706">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Push/Pull">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Creepster&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#050706; --crypt:#0c110e; --card:#111815; --edge:#1f2e26;
+    --pumpkin:#3dff8f; --ember:#8dffbe; --witch:#1fa85f; --slime:#c7ff4a;
+    --bone:#e8f6ee; --ash:#7c9689;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  button,input,a,summary{touch-action:manipulation}
+  html{overflow-x:hidden;overscroll-behavior-x:none}
+  html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden;overscroll-behavior-x:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{
+    touch-action:pan-y;position:relative;
+    background:var(--night);
+    background-image:
+      radial-gradient(120% 60% at 50% -10%, rgba(61,255,143,.14), transparent 60%),
+      radial-gradient(90% 50% at 100% 100%, rgba(31,168,95,.16), transparent 65%);
+    background-attachment:fixed;
+    color:var(--bone);
+    font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+    font-size:16px;line-height:1.5;
+    padding:env(safe-area-inset-top) 0 104px;
+  }
+  .wrap{width:100%;max-width:560px;margin:0 auto;padding:0 14px}
+
+  .topbar{padding:20px 0 4px;text-align:center}
+  h1{
+    font-family:'Creepster',cursive;font-weight:400;
+    font-size:40px;line-height:1;margin:0;letter-spacing:.02em;
+    color:var(--pumpkin);text-shadow:0 0 22px rgba(61,255,143,.5), 0 2px 0 #0a3d21;
+  }
+  .namebox{
+    margin:12px auto 0;display:block;width:100%;max-width:240px;text-align:center;
+    background:transparent;border:0;border-bottom:1.5px dashed var(--edge);
+    color:var(--ember);font-family:'Bricolage Grotesque',sans-serif;font-weight:700;
+    font-size:15px;padding:6px 0;outline:none;
+  }
+  .namebox:focus{border-bottom-color:var(--pumpkin)}
+
+  .syncline{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px 0 0}
+  .dot{width:8px;height:8px;border-radius:50%;background:#3b4a42;flex:0 0 auto}
+  .dot.on{background:var(--pumpkin);box-shadow:0 0 10px rgba(61,255,143,.6)}
+  .dot.busy{background:var(--slime)}
+  .dot.err{background:#ff8a6a}
+  .syncline span{font-size:12px;color:var(--ash)}
+  .syncline button{
+    background:transparent;border:1.5px solid var(--edge);border-radius:8px;
+    color:#5fdc96;font-size:11.5px;font-weight:700;padding:4px 9px;cursor:pointer;
+  }
+
+  .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:18px 0 6px}
+  .tab{
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:11.5px;
+    letter-spacing:.09em;text-transform:uppercase;
+    background:var(--crypt);color:var(--ash);border:1.5px solid var(--edge);
+    border-radius:11px;padding:13px 2px;cursor:pointer;
+  }
+  .tab[aria-selected="true"]{
+    background:linear-gradient(180deg,#48ff9a,#17c163);color:#04140c;border-color:#7dffbb;
+    box-shadow:0 0 18px rgba(61,255,143,.38);
+  }
+  .tab:focus-visible{outline:2px solid var(--slime);outline-offset:2px}
+
+  details.how{margin:14px 0 4px;background:var(--crypt);border:1.5px solid var(--edge);border-radius:12px;padding:11px 13px}
+  details.how summary{cursor:pointer;list-style:none;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:13px;color:var(--ember)}
+  details.how summary::-webkit-details-marker{display:none}
+  details.how p{margin:9px 0 0;font-size:13.5px;color:var(--ash)}
+
+  .sectionhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:22px 0 10px}
+  .sectionhead h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:19px;margin:0;color:var(--bone)}
+  .pill{
+    font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;
+    color:#5fdc96;background:rgba(31,168,95,.14);border:1.5px solid rgba(61,255,143,.28);
+    border-radius:999px;padding:4px 10px;
+  }
+
+  .ex{background:var(--card);border:1.5px solid var(--edge);border-radius:13px;padding:13px;margin-bottom:11px}
+  .ex.main{border-color:rgba(61,255,143,.38)}
+  .exname{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:16.5px;margin:0 0 7px}
+  .tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}
+  .tag{font-size:11px;font-weight:600;border-radius:7px;padding:3px 8px;border:1.5px solid}
+  .tag.hot{color:var(--ember);background:rgba(61,255,143,.12);border-color:rgba(61,255,143,.34)}
+  .tag.cool{color:#9cb8a9;background:rgba(124,150,137,.10);border-color:rgba(124,150,137,.26)}
+  .tag.side{color:#c7ffdd;background:rgba(61,255,143,.06);border-color:rgba(141,255,190,.36)}
+
+  .metaline{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:9px}
+  .kind{font-family:'Bricolage Grotesque',sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+  .kind.main{color:var(--pumpkin)}
+  .kind.acc{color:var(--ash)}
+  .scheme{font-size:13.5px;color:var(--bone);font-weight:600}
+  .demo{
+    margin-left:auto;font-size:11.5px;font-weight:700;color:#5fdc96;
+    background:transparent;border:1.5px solid rgba(61,255,143,.28);border-radius:8px;
+    padding:6px 10px;cursor:pointer;text-decoration:none;
+  }
+  .goal{font-size:13px;color:var(--ember);margin:0 0 9px}
+  .goal.empty{color:var(--ash)}
+
+  .setgrid{display:grid;grid-template-columns:20px minmax(0,1fr) minmax(0,1fr) 56px 20px;gap:7px;align-items:center}
+  .colhead{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#53695d;padding-bottom:2px}
+  .colhead.r{text-align:center}
+  .setno{font-size:11.5px;color:var(--ash);font-weight:700;text-align:center}
+  .setgrid input{
+    width:100%;min-width:0;background:#0a100d;border:1.5px solid var(--edge);border-radius:9px;
+    color:var(--bone);font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;
+    padding:11px 9px;outline:none;
+  }
+  .setgrid input:focus{border-color:var(--pumpkin)}
+  .setgrid input::placeholder{color:#4e6459}
+  .last{font-size:11.5px;color:#6f8c7e;text-align:center;font-variant-numeric:tabular-nums;line-height:1.2}
+  .last.none{color:#3f524a}
+  .check{text-align:center;font-size:16px;color:#33443b;line-height:1}
+  .check.hit{color:var(--slime);text-shadow:0 0 10px rgba(199,255,74,.5)}
+  .orm{font-size:12px;color:var(--ash);margin:9px 0 0}
+  .orm b{color:var(--ember);font-weight:700}
+
+  .savebar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg,rgba(5,7,6,0),rgba(5,7,6,.96) 40%)}
+  .savebar .wrap{padding:0}
+  .save{
+    width:100%;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:15px;
+    letter-spacing:.06em;text-transform:uppercase;color:#04140c;
+    background:linear-gradient(180deg,#4bff9c,#14bb5f);border:1.5px solid #7dffbb;
+    border-radius:12px;padding:17px;cursor:pointer;box-shadow:0 0 26px rgba(61,255,143,.32);
+  }
+  .save:active{transform:translateY(1px)}
+  .banner{border-radius:11px;padding:10px 12px;font-size:13.5px;font-weight:600;margin:12px 0 0;border:1.5px solid}
+  .banner.ok{color:#d8ff9b;background:rgba(199,255,74,.10);border-color:rgba(199,255,74,.32)}
+  .banner.warn{color:#ffe08a;background:rgba(255,224,138,.08);border-color:rgba(255,224,138,.3)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <input class="namebox" id="clientName" placeholder="whose program is this?" autocomplete="off">
+    <div class="syncline">
+      <span class="dot" id="dot"></span>
+      <span id="syncmsg">Saved on this phone</span>
+      <button id="linkbtn" type="button">Link</button>
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <details class="how">
+    <summary>How this progresses</summary>
+    <p>Double progression. Stay at the same weight until you hit the top of the rep range on every set — then add load and drop back to the bottom of the range. The goal line on each card tells you what to chase tonight.</p>
+  </details>
+
+  <main id="day"></main>
+  <div id="banner"></div>
+</div>
+
+<div class="savebar"><div class="wrap">
+  <button class="save" id="save">Save workout</button>
+</div></div>
+
+<script>
+/* ------------------------------------------------------------------
+   SHEET SYNC — paste your Apps Script /exec URL here (see README.md).
+   Leave it empty and the tracker still works, phone-local only.
+-------------------------------------------------------------------*/
+var API = '';
+</script>
+<script>
+(function(){
+  // the on-screen keyboard can drag the page sideways; snap it back
+  function pinLeft(){
+    if(window.scrollX!==0) window.scrollTo(0,window.scrollY);
+    document.documentElement.scrollLeft=0; document.body.scrollLeft=0;
+  }
+  window.addEventListener('scroll',pinLeft,{passive:true});
+  window.addEventListener('resize',pinLeft);
+  document.addEventListener('focusin',function(){[0,120,300,600].forEach(function(d){setTimeout(pinLeft,d)})});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(t){
+    document.addEventListener(t,function(e){e.preventDefault()},{passive:false});
+  });
+
+  var KEY='hwn_pushpull_v1', DRAFT='hwn_pushpull_v1_draft', NAME_KEY='hwn_client_name', ID_KEY='hwn_athlete_key';
+
+  var DAYS=[
+   {tab:'Push A', title:'Delts, triceps, quads', loc:'Gym', ex:[
+     {id:'pa1',name:'Seated DB Shoulder Press',kind:'main',sets:2,low:6,high:9,tags:[['Shoulders',1]]},
+     {id:'pa2',name:'Incline Bench DB Lateral Raise',kind:'acc',sets:3,low:9,high:12,tags:[['Side delts',1]]},
+     {id:'pa4',name:'Cable Tricep Pressdown',kind:'main',sets:2,low:6,high:9,tags:[['Triceps',1]]},
+     {id:'pa5',name:'Overhead Cable Triceps Extension',kind:'acc',sets:3,low:9,high:12,tags:[['Triceps',1]]},
+     {id:'pa6',name:'Leg Extension',kind:'acc',sets:3,low:9,high:12,tags:[['Quads',0]]},
+     {id:'pa8',name:'Banded Machine Sissy Squat',kind:'acc',sets:3,low:9,high:12,tags:[['Quads',0]]},
+     {id:'pa9',name:'Incline DB Bench Press',kind:'main',sets:2,low:6,high:9,tags:[['Upper chest',0]]}
+   ]},
+   {tab:'Pull A', title:'Heavy pulls, rear delts, biceps', loc:'Gym', ex:[
+     {id:'la1',name:'Single-Leg Weighted Hyperextension',kind:'main',sets:2,low:9,high:12,each:true,tags:[['Glutes / hams',0]]},
+     {id:'la2',name:'Pendlay Row',kind:'main',sets:2,low:6,high:9,tags:[['Mid back',0]]},
+     {id:'la8',name:'Barbell High Pull',kind:'main',sets:2,low:6,high:9,tags:[['Rear delts',1],['Traps',0]]},
+     {id:'la3',name:'Machine Pullover',kind:'acc',sets:3,low:9,high:12,tags:[['Lats',0]]},
+     {id:'la4',name:'Bent EZ Bar Rear Delt Flye',kind:'acc',sets:3,low:9,high:12,tags:[['Rear delts',1]]},
+     {id:'la5',name:'Incline DB Curl',kind:'acc',sets:3,low:9,high:12,tags:[['Biceps',1]]},
+     {id:'la7',name:'Smith Rack Knee Raise',kind:'acc',sets:3,low:7,high:10,tags:[['Abs',0]]}
+   ]},
+   {tab:'Push B', title:'Shoulders, chest, arms, quads', loc:'Gym', ex:[
+     {id:'pb1',name:'Machine Shoulder Press',kind:'main',sets:2,low:6,high:9,tags:[['Shoulders',1]]},
+     {id:'pb2',name:'Single-Arm Cable Y Raise',kind:'acc',sets:3,low:9,high:12,each:true,tags:[['Side delts',1]]},
+     {id:'pb3',name:'Pec Deck Flye',kind:'acc',sets:3,low:9,high:12,tags:[['Chest',0]]},
+     {id:'pb4',name:'Close-Grip Smith Bench Press',kind:'main',sets:2,low:6,high:9,tags:[['Triceps',1],['Chest',0]]},
+     {id:'pb5',name:'DB Skullcrusher',kind:'acc',sets:3,low:9,high:12,tags:[['Triceps',1]]},
+     {id:'pb7',name:'Banded Pendulum Squat',kind:'main',sets:2,low:6,high:9,tags:[['Quads',0]]},
+     {id:'pb6',name:'Plate-Loaded Sissy Squat Machine',kind:'acc',sets:3,low:9,high:12,tags:[['Quads',0]]}
+   ]},
+   {tab:'Pull B', title:'Hyperextensions, back, biceps', loc:'Gym', ex:[
+     {id:'lb1',name:'45° Weighted Hyperextension',kind:'main',sets:2,low:9,high:12,tags:[['Glutes / hams',0]]},
+     {id:'lb2',name:'Hip Adduction Machine',kind:'acc',sets:3,low:9,high:12,tags:[['Adductors',0]]},
+     {id:'lb3',name:'Lat-Focused Row Machine',kind:'main',sets:2,low:6,high:9,tags:[['Lats',0]]},
+     {id:'lb4',name:'Cable Face Pull',kind:'acc',sets:3,low:9,high:12,tags:[['Rear delts',1]]},
+     {id:'lb8',name:'Barbell Hip Thrust',kind:'main',sets:2,low:6,high:9,tags:[['Glutes',0]]},
+     {id:'lb6',name:'Bayesian Cable Curl',kind:'acc',sets:3,low:9,high:12,tags:[['Biceps',1]]},
+     {id:'lb9',name:'Machine Overhead Bicep Curl',kind:'acc',sets:3,low:9,high:12,tags:[['Biceps',1]]},
+     {id:'lb7',name:'GHR Ab Crunch',kind:'acc',sets:2,low:9,high:12,tags:[['Abs',0]]}
+   ]}
+  ];
+
+  function read(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
+  function write(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+
+  var store=read(KEY,{history:{},updated:0});
+  if(!store.history) store.history={};
+  var draft=read(DRAFT,{});
+  var cur=0;
+  var athlete='';
+  try{athlete=localStorage.getItem(ID_KEY)||''}catch(e){}
+
+  var nameEl=document.getElementById('clientName');
+  try{nameEl.value=localStorage.getItem(NAME_KEY)||''}catch(e){}
+  nameEl.addEventListener('input',function(){try{localStorage.setItem(NAME_KEY,nameEl.value)}catch(e){}});
+
+  function r2(n){return Math.round(n*2)/2}
+  function r25(n){return Math.round(n/2.5)*2.5}
+  function epley(w,r){return w*(1+r/30)}
+  function fmt(n){return (Math.round(n*10)/10).toString()}
+
+  function evaluate(ex,sets){
+    var done=sets.filter(function(s){return s.w!==''&&s.r!==''});
+    if(!done.length) return null;
+    var w=Math.max.apply(null,done.map(function(s){return +s.w}));
+    var allHit=done.length>=ex.sets && done.every(function(s){return +s.r>=ex.high});
+    if(allHit) return {weight:r25(w+(ex.kind==='main'?5:2.5)),reps:ex.low};
+    var best=Math.max.apply(null,done.map(function(s){return +s.r}));
+    return {weight:r25(w),reps:Math.min(ex.high,best+1)};
+  }
+
+  function schemeText(ex){
+    var reps = ex.low===ex.high ? (ex.low+'') : (ex.low+'–'+ex.high);
+    return ex.sets+' × '+reps+(ex.each?' each side':'');
+  }
+
+  function render(){
+    document.getElementById('tabs').innerHTML=DAYS.map(function(d,i){
+      return '<button class="tab" role="tab" aria-selected="'+(i===cur)+'" data-i="'+i+'">'+d.tab+'</button>';
+    }).join('');
+
+    var d=DAYS[cur];
+    var html='<div class="sectionhead"><h2>'+d.title+'</h2><span class="pill">'+d.loc+'</span></div>';
+
+    d.ex.forEach(function(ex){
+      var h=store.history[ex.id];
+      var lastSets=(h&&h.last&&h.last.sets)||[];
+      var tags=ex.tags.map(function(t){
+        return '<span class="tag '+(t[1]?'hot':'cool')+'">'+t[0]+'</span>';
+      }).join('')+(ex.each?'<span class="tag side">per side</span>':'');
+
+      var goal = h&&h.suggest
+        ? '<p class="goal">Tonight: '+fmt(h.suggest.weight)+' lb × '+h.suggest.reps+' — last logged '+h.last.date+'</p>'
+        : '<p class="goal empty">No history yet. Pick a load you can control for '+ex.high+' clean reps.</p>';
+
+      var rows='<div class="colhead"></div><div class="colhead">Weight</div><div class="colhead">Reps</div>'+
+               '<div class="colhead r">Last</div><div class="colhead"></div>';
+      for(var i=0;i<ex.sets;i++){
+        var kw=ex.id+'-'+i+'-w', kr=ex.id+'-'+i+'-r';
+        var ls=lastSets[i];
+        var lastTxt = ls ? (fmt(ls.w)+'×'+ls.r) : '—';
+        rows+='<span class="setno">'+(i+1)+'</span>'+
+          '<input inputmode="decimal" placeholder="'+(ls?fmt(ls.w):'lb')+'" id="'+kw+'" value="'+(draft[kw]||'')+'">'+
+          '<input inputmode="numeric" placeholder="'+(ls?ls.r:'reps')+'" id="'+kr+'" value="'+(draft[kr]||'')+'">'+
+          '<span class="last'+(ls?'':' none')+'">'+lastTxt+'</span>'+
+          '<span class="check" id="chk-'+ex.id+'-'+i+'">✦</span>';
+      }
+
+      html+='<article class="ex '+(ex.kind==='main'?'main':'')+'" data-ex="'+ex.id+'">'+
+        '<h3 class="exname">'+ex.name+'</h3>'+
+        '<div class="tags">'+tags+'</div>'+
+        '<div class="metaline">'+
+          '<span class="kind '+ex.kind+'">'+(ex.kind==='main'?'Main':'Accessory')+'</span>'+
+          '<span class="scheme">'+schemeText(ex)+'</span>'+
+          '<a class="demo" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query='+encodeURIComponent(ex.name+' form')+'">Demo</a>'+
+        '</div>'+ goal +
+        '<div class="setgrid">'+rows+'</div>'+
+        '<p class="orm" id="orm-'+ex.id+'"></p>'+
+      '</article>';
+    });
+
+    document.getElementById('day').innerHTML=html;
+    d.ex.forEach(refresh);
+  }
+
+  function readSets(ex){
+    var out=[];
+    for(var i=0;i<ex.sets;i++){
+      var w=document.getElementById(ex.id+'-'+i+'-w'), r=document.getElementById(ex.id+'-'+i+'-r');
+      out.push({w:w?w.value.trim():'',r:r?r.value.trim():''});
+    }
+    return out;
+  }
+
+  function refresh(ex){
+    var sets=readSets(ex), best=0;
+    sets.forEach(function(s,i){
+      var c=document.getElementById('chk-'+ex.id+'-'+i);
+      if(c) c.className='check'+(s.r!==''&&+s.r>=ex.high?' hit':'');
+      if(s.w!==''&&s.r!=='') best=Math.max(best,epley(+s.w,+s.r));
+    });
+    var el=document.getElementById('orm-'+ex.id);
+    if(el) el.innerHTML = best>0 ? 'Estimated 1RM <b>'+r2(best)+' lb</b>' : '';
+  }
+
+  document.addEventListener('input',function(e){
+    var art=e.target.closest&&e.target.closest('.ex');
+    if(!art||e.target.tagName!=='INPUT') return;
+    draft[e.target.id]=e.target.value;
+    write(DRAFT,draft);
+    pushSoon();
+    var ex=DAYS[cur].ex.filter(function(x){return x.id===art.dataset.ex})[0];
+    if(ex) refresh(ex);
+  });
+
+  document.getElementById('tabs').addEventListener('click',function(e){
+    var b=e.target.closest('.tab'); if(!b) return;
+    cur=+b.dataset.i; document.getElementById('banner').innerHTML=''; render();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  document.getElementById('save').addEventListener('click',function(){
+    var d=DAYS[cur], saved=0, today=new Date().toISOString().slice(0,10);
+    d.ex.forEach(function(ex){
+      var sets=readSets(ex).filter(function(s){return s.w!==''&&s.r!==''});
+      if(!sets.length) return;
+      var sug=evaluate(ex,sets);
+      store.history[ex.id]={last:{sets:sets.map(function(s){return{w:+s.w,r:+s.r}}),date:today},suggest:sug};
+      saved++;
+    });
+    if(!saved){
+      document.getElementById('banner').innerHTML='<div class="banner warn">Nothing logged yet — put a weight and reps in at least one set.</div>';
+      return;
+    }
+    store.updated=Date.now();
+    write(KEY,store);
+    d.ex.forEach(function(ex){for(var i=0;i<ex.sets;i++){delete draft[ex.id+'-'+i+'-w'];delete draft[ex.id+'-'+i+'-r'];}});
+    write(DRAFT,draft);
+    push();
+    render();
+    document.getElementById('banner').innerHTML='<div class="banner ok">Saved '+saved+' exercise'+(saved>1?'s':'')+'. Next session\u2019s targets are on the cards.</div>';
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  // ---- Google Sheet sync -----------------------------------------
+  var dotEl=document.getElementById('dot'), msgEl=document.getElementById('syncmsg'),
+      linkEl=document.getElementById('linkbtn'), pushTimer=null;
+
+  function status(kind,text){ dotEl.className='dot'+(kind?' '+kind:''); msgEl.textContent=text; }
+
+  function linked(){ return !!(API && athlete); }
+
+  function setStatusIdle(){
+    if(!API) status('','Saved on this phone');
+    else if(!athlete) status('','Not linked — tap Link');
+    else status('on','Synced as '+athlete);
+  }
+
+  linkEl.addEventListener('click',function(){
+    if(!API){ alert('No sync endpoint yet. Add your Apps Script /exec URL to the API line in index.html — README.md has the steps.'); return; }
+    var v=prompt('Sync key — any word you will remember. Use the same key on every device.',athlete||'');
+    if(v===null) return;
+    athlete=v.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'');
+    try{localStorage.setItem(ID_KEY,athlete)}catch(e){}
+    linkEl.textContent=athlete?'Change':'Link';
+    if(athlete) pull(true); else setStatusIdle();
+  });
+  linkEl.textContent=athlete?'Change':'Link';
+
+  function push(){
+    if(!linked()) return;
+    status('busy','Saving to Sheet…');
+    var body=JSON.stringify({key:athlete,store:store,draft:draft,updated:store.updated||Date.now()});
+    fetch(API,{method:'POST',body:body,headers:{'Content-Type':'text/plain;charset=utf-8'},redirect:'follow'})
+      .then(function(){setStatusIdle()})
+      .catch(function(){
+        // opaque fallback: the write still lands, we just cannot read the reply
+        fetch(API,{method:'POST',mode:'no-cors',body:body}).then(function(){setStatusIdle()})
+          .catch(function(){status('err','Offline — saved on this phone')});
+      });
+  }
+  function pushSoon(){ if(!linked()) return; clearTimeout(pushTimer); pushTimer=setTimeout(push,1500); }
+
+  function pull(announce){
+    if(!linked()){ setStatusIdle(); return; }
+    status('busy','Loading from Sheet…');
+    fetch(API+'?key='+encodeURIComponent(athlete)+'&t='+Date.now(),{redirect:'follow'})
+      .then(function(r){return r.json()})
+      .then(function(d){
+        if(d && d.store && d.store.history && (d.updated||0) >= (store.updated||0)){
+          store=d.store; if(!store.history) store.history={};
+          draft=d.draft||draft;
+          write(KEY,store); write(DRAFT,draft);
+          render();
+        }else if(announce){ push(); }
+        setStatusIdle();
+      })
+      .catch(function(){ status('err','Offline — saved on this phone') });
+  }
+
+  render();
+  pull(false);
+})();
+</script>
+</body>
+</html>
