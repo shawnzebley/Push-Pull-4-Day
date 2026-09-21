@@ -22,7 +22,7 @@
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   button,input,a,summary{touch-action:manipulation}
-  html{overflow-x:hidden;overscroll-behavior-x:none}
+  html{overflow-x:hidden;overscroll-behavior-x:none;scroll-behavior:smooth}
   html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden;overscroll-behavior-x:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
   body{
     touch-action:pan-y;position:relative;
@@ -30,7 +30,8 @@
     background-image:
       radial-gradient(120% 60% at 50% -10%, rgba(61,255,143,.14), transparent 60%),
       radial-gradient(90% 50% at 100% 100%, rgba(31,168,95,.16), transparent 65%);
-    background-attachment:fixed;
+    background-repeat:no-repeat;
+    -webkit-overflow-scrolling:touch;
     color:var(--bone);
     font-family:'Plus Jakarta Sans',system-ui,sans-serif;
     font-size:16px;line-height:1.5;
@@ -129,6 +130,25 @@
   .orm{font-size:12px;color:var(--ash);margin:9px 0 0}
   .orm b{color:var(--ember);font-weight:700}
 
+  .ex.extra{border-style:dashed;border-color:rgba(199,255,74,.34)}
+  .drop{background:transparent;border:1.5px solid var(--edge);border-radius:8px;color:#8aa89a;
+    font-size:11.5px;font-weight:700;padding:5px 9px;cursor:pointer;margin-left:auto}
+
+  .addwrap{background:var(--crypt);border:1.5px solid var(--edge);border-radius:13px;padding:13px;margin-top:18px}
+  .addwrap h3{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:14px;margin:0 0 4px}
+  .addwrap .hint{font-size:12.5px;color:var(--ash);margin:0 0 11px}
+  .addwrap select,.addwrap input{
+    width:100%;min-width:0;background:#0a100d;border:1.5px solid var(--edge);border-radius:9px;
+    color:var(--bone);font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;padding:11px 9px;outline:none;
+  }
+  .addwrap select:focus,.addwrap input:focus{border-color:var(--pumpkin)}
+  .addwrap input::placeholder{color:#4e6459}
+  .addrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:8px}
+  .addrow .colhead{grid-column:auto}
+  .addbtn{width:100%;margin-top:10px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;
+    font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#c7ffdd;background:rgba(61,255,143,.10);
+    border:1.5px solid rgba(61,255,143,.34);border-radius:10px;padding:14px;cursor:pointer}
+
   .savebar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
     background:linear-gradient(180deg,rgba(5,7,6,0),rgba(5,7,6,.96) 40%)}
   .savebar .wrap{padding:0}
@@ -201,26 +221,26 @@ var API = '';
      {id:'pa4',name:'Cable Tricep Pressdown',kind:'main',sets:2,low:6,high:9,tags:[['Triceps',1]]},
      {id:'pa5',name:'Overhead Cable Triceps Extension',kind:'acc',sets:3,low:9,high:12,tags:[['Triceps',1]]},
      {id:'pa6',name:'Leg Extension',kind:'acc',sets:3,low:9,high:12,tags:[['Quads',0]]},
-     {id:'pa8',name:'Banded Machine Sissy Squat',kind:'acc',sets:3,low:9,high:12,tags:[['Quads',0]]},
-     {id:'pa9',name:'Incline DB Bench Press',kind:'main',sets:2,low:6,high:9,tags:[['Upper chest',0]]}
+     {id:'pa8',name:'Banded Sissy Squat',kind:'acc',sets:3,amrap:true,tags:[['Quads',0]]},
+     {id:'pa9',name:'Machine Incline Chest Press',kind:'main',sets:3,low:6,high:9,tags:[['Upper chest',0]]}
    ]},
    {tab:'Pull A', title:'Heavy pulls, rear delts, biceps', loc:'Gym', ex:[
      {id:'la1',name:'Single-Leg Weighted Hyperextension',kind:'main',sets:2,low:9,high:12,each:true,tags:[['Glutes / hams',0]]},
-     {id:'la2',name:'Pendlay Row',kind:'main',sets:2,low:6,high:9,tags:[['Mid back',0]]},
-     {id:'la8',name:'Barbell High Pull',kind:'main',sets:2,low:6,high:9,tags:[['Rear delts',1],['Traps',0]]},
+     {id:'la2',name:'Barbell Dead Row',kind:'main',sets:2,low:5,high:8,tags:[['Mid back',0]]},
+     {id:'la8',name:'Barbell High Pull',kind:'main',sets:2,low:5,high:8,tags:[['Rear delts',1],['Traps',0]]},
      {id:'la3',name:'Machine Pullover',kind:'acc',sets:3,low:9,high:12,tags:[['Lats',0]]},
      {id:'la4',name:'Bent EZ Bar Rear Delt Flye',kind:'acc',sets:3,low:9,high:12,tags:[['Rear delts',1]]},
-     {id:'la5',name:'Incline DB Curl',kind:'acc',sets:3,low:9,high:12,tags:[['Biceps',1]]},
+     {id:'la5',name:'Deficit Front Raise to Curl',kind:'acc',sets:3,low:9,high:12,tags:[['Biceps',1],['Front delts',1]]},
      {id:'la7',name:'Smith Rack Knee Raise',kind:'acc',sets:3,low:7,high:10,tags:[['Abs',0]]}
    ]},
    {tab:'Push B', title:'Shoulders, chest, arms, quads', loc:'Gym', ex:[
-     {id:'pb1',name:'Machine Shoulder Press',kind:'main',sets:2,low:6,high:9,tags:[['Shoulders',1]]},
+     {id:'pb1',name:'Converging Machine Shoulder Press',kind:'main',sets:2,low:6,high:9,tags:[['Shoulders',1]]},
      {id:'pb2',name:'Single-Arm Cable Y Raise',kind:'acc',sets:3,low:9,high:12,each:true,tags:[['Side delts',1]]},
-     {id:'pb3',name:'Pec Deck Flye',kind:'acc',sets:3,low:9,high:12,tags:[['Chest',0]]},
+     {id:'pb3',name:'Decline Pec Deck',kind:'acc',sets:3,low:9,high:12,tags:[['Chest',0]]},
      {id:'pb4',name:'Close-Grip Smith Bench Press',kind:'main',sets:2,low:6,high:9,tags:[['Triceps',1],['Chest',0]]},
      {id:'pb5',name:'DB Skullcrusher',kind:'acc',sets:3,low:9,high:12,tags:[['Triceps',1]]},
-     {id:'pb7',name:'Banded Pendulum Squat',kind:'main',sets:2,low:6,high:9,tags:[['Quads',0]]},
-     {id:'pb6',name:'Plate-Loaded Sissy Squat Machine',kind:'acc',sets:3,low:9,high:12,tags:[['Quads',0]]}
+     {id:'pb6',name:'Plate-Loaded Sissy Squat Machine',kind:'acc',sets:3,low:9,high:12,tags:[['Quads',0]]},
+     {id:'pb7',name:'Leg Extension',kind:'main',sets:12,low:4,high:4,scheme:'2 rounds of 6 × 4',tags:[['Quads',0]]}
    ]},
    {tab:'Pull B', title:'Hyperextensions, back, biceps', loc:'Gym', ex:[
      {id:'lb1',name:'45° Weighted Hyperextension',kind:'main',sets:2,low:9,high:12,tags:[['Glutes / hams',0]]},
@@ -228,17 +248,30 @@ var API = '';
      {id:'lb3',name:'Lat-Focused Row Machine',kind:'main',sets:2,low:6,high:9,tags:[['Lats',0]]},
      {id:'lb4',name:'Cable Face Pull',kind:'acc',sets:3,low:9,high:12,tags:[['Rear delts',1]]},
      {id:'lb8',name:'Barbell Hip Thrust',kind:'main',sets:2,low:6,high:9,tags:[['Glutes',0]]},
-     {id:'lb6',name:'Bayesian Cable Curl',kind:'acc',sets:3,low:9,high:12,tags:[['Biceps',1]]},
+     {id:'lb6',name:'Cable Pelican Curl',kind:'acc',sets:3,low:9,high:12,tags:[['Biceps',1]]},
      {id:'lb9',name:'Machine Overhead Bicep Curl',kind:'acc',sets:3,low:9,high:12,tags:[['Biceps',1]]},
-     {id:'lb7',name:'GHR Ab Crunch',kind:'acc',sets:2,low:9,high:12,tags:[['Abs',0]]}
+     {id:'lb7',name:'GHR Ab Crunch',kind:'acc',sets:3,low:9,high:12,tags:[['Abs',0]]}
    ]}
+  ];
+
+  // lifts this program used to run — available from the picker at the bottom of any day
+  var RETIRED=[
+    {name:'Incline DB Bench Press',sets:2,low:6,high:9},
+    {name:'Banded Machine Sissy Squat',sets:3,low:9,high:12},
+    {name:'Pendlay Row',sets:2,low:6,high:9},
+    {name:'Incline DB Curl',sets:3,low:9,high:12},
+    {name:'Machine Shoulder Press',sets:2,low:6,high:9},
+    {name:'Pec Deck Flye',sets:3,low:9,high:12},
+    {name:'Banded Pendulum Squat',sets:2,low:6,high:9},
+    {name:'Bayesian Cable Curl',sets:3,low:9,high:12}
   ];
 
   function read(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
   function write(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 
-  var store=read(KEY,{history:{},updated:0});
+  var store=read(KEY,{history:{},extras:{},updated:0});
   if(!store.history) store.history={};
+  if(!store.extras) store.extras={};
   var draft=read(DRAFT,{});
   var cur=0;
   var athlete='';
@@ -253,10 +286,16 @@ var API = '';
   function epley(w,r){return w*(1+r/30)}
   function fmt(n){return (Math.round(n*10)/10).toString()}
 
+  function extrasFor(i){ return (store.extras && store.extras[i]) || []; }
+  function dayEx(i){ if(i===undefined) i=cur; return DAYS[i].ex.concat(extrasFor(i)); }
+
   function evaluate(ex,sets){
     var done=sets.filter(function(s){return s.w!==''&&s.r!==''});
     if(!done.length) return null;
     var w=Math.max.apply(null,done.map(function(s){return +s.w}));
+    if(ex.amrap){
+      return {weight:r25(w),reps:Math.max.apply(null,done.map(function(s){return +s.r}))};
+    }
     var allHit=done.length>=ex.sets && done.every(function(s){return +s.r>=ex.high});
     if(allHit) return {weight:r25(w+(ex.kind==='main'?5:2.5)),reps:ex.low};
     var best=Math.max.apply(null,done.map(function(s){return +s.r}));
@@ -264,7 +303,8 @@ var API = '';
   }
 
   function schemeText(ex){
-    var reps = ex.low===ex.high ? (ex.low+'') : (ex.low+'–'+ex.high);
+    if(ex.scheme) return ex.scheme+(ex.each?' each side':'');
+    var reps = ex.amrap ? 'AMRAP' : (ex.low===ex.high ? (ex.low+'') : (ex.low+'–'+ex.high));
     return ex.sets+' × '+reps+(ex.each?' each side':'');
   }
 
@@ -276,7 +316,7 @@ var API = '';
     var d=DAYS[cur];
     var html='<div class="sectionhead"><h2>'+d.title+'</h2><span class="pill">'+d.loc+'</span></div>';
 
-    d.ex.forEach(function(ex){
+    dayEx().forEach(function(ex){
       var h=store.history[ex.id];
       var lastSets=(h&&h.last&&h.last.sets)||[];
       var tags=ex.tags.map(function(t){
@@ -284,8 +324,8 @@ var API = '';
       }).join('')+(ex.each?'<span class="tag side">per side</span>':'');
 
       var goal = h&&h.suggest
-        ? '<p class="goal">Tonight: '+fmt(h.suggest.weight)+' lb × '+h.suggest.reps+' — last logged '+h.last.date+'</p>'
-        : '<p class="goal empty">No history yet. Pick a load you can control for '+ex.high+' clean reps.</p>';
+        ? '<p class="goal">Tonight: '+fmt(h.suggest.weight)+' lb × '+h.suggest.reps+(ex.amrap?'+':'')+' — last logged '+h.last.date+'</p>'
+        : '<p class="goal empty">No history yet. '+(ex.amrap?'Pick a load you can take to failure safely.':'Pick a load you can control for '+ex.high+' clean reps.')+'</p>';
 
       var rows='<div class="colhead"></div><div class="colhead">Weight</div><div class="colhead">Reps</div>'+
                '<div class="colhead r">Last</div><div class="colhead"></div>';
@@ -300,21 +340,37 @@ var API = '';
           '<span class="check" id="chk-'+ex.id+'-'+i+'">✦</span>';
       }
 
-      html+='<article class="ex '+(ex.kind==='main'?'main':'')+'" data-ex="'+ex.id+'">'+
+      html+='<article class="ex '+(ex.kind==='main'?'main':'')+(ex.custom?' extra':'')+'" data-ex="'+ex.id+'">'+
         '<h3 class="exname">'+ex.name+'</h3>'+
         '<div class="tags">'+tags+'</div>'+
         '<div class="metaline">'+
-          '<span class="kind '+ex.kind+'">'+(ex.kind==='main'?'Main':'Accessory')+'</span>'+
+          '<span class="kind '+ex.kind+'">'+(ex.custom?'Added':(ex.kind==='main'?'Main':'Accessory'))+'</span>'+
           '<span class="scheme">'+schemeText(ex)+'</span>'+
           '<a class="demo" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query='+encodeURIComponent(ex.name+' form')+'">Demo</a>'+
+          (ex.custom?'<button type="button" class="drop" data-drop="'+ex.id+'">Remove</button>':'')+
         '</div>'+ goal +
         '<div class="setgrid">'+rows+'</div>'+
         '<p class="orm" id="orm-'+ex.id+'"></p>'+
       '</article>';
     });
 
+    html+='<section class="addwrap">'+
+      '<h3>Add a lift to this day</h3>'+
+      '<p class="hint">Swapped-out lifts are listed here. Pick one or type your own, then set the sets and reps. Leave max reps blank for AMRAP.</p>'+
+      '<select id="addpick"><option value="">Choose a swapped-out lift…</option>'+
+        RETIRED.map(function(r,i){return '<option value="'+i+'">'+r.name+'</option>'}).join('')+
+        '<option value="custom">Something else…</option></select>'+
+      '<div class="addrow" style="grid-template-columns:1fr"><input id="addname" placeholder="Exercise name" autocomplete="off"></div>'+
+      '<div class="addrow">'+
+        '<input id="addsets" inputmode="numeric" placeholder="Sets">'+
+        '<input id="addlow" inputmode="numeric" placeholder="Min reps">'+
+        '<input id="addhigh" inputmode="numeric" placeholder="Max reps">'+
+      '</div>'+
+      '<button type="button" class="addbtn" id="addbtn">Add to '+d.tab+'</button>'+
+    '</section>';
+
     document.getElementById('day').innerHTML=html;
-    d.ex.forEach(refresh);
+    dayEx().forEach(refresh);
   }
 
   function readSets(ex){
@@ -330,7 +386,8 @@ var API = '';
     var sets=readSets(ex), best=0;
     sets.forEach(function(s,i){
       var c=document.getElementById('chk-'+ex.id+'-'+i);
-      if(c) c.className='check'+(s.r!==''&&+s.r>=ex.high?' hit':'');
+      var target = ex.amrap ? ((store.history[ex.id]&&store.history[ex.id].suggest&&store.history[ex.id].suggest.reps+1)||1) : ex.high;
+      if(c) c.className='check'+(s.r!==''&&+s.r>=target?' hit':'');
       if(s.w!==''&&s.r!=='') best=Math.max(best,epley(+s.w,+s.r));
     });
     var el=document.getElementById('orm-'+ex.id);
@@ -343,8 +400,45 @@ var API = '';
     draft[e.target.id]=e.target.value;
     write(DRAFT,draft);
     pushSoon();
-    var ex=DAYS[cur].ex.filter(function(x){return x.id===art.dataset.ex})[0];
+    var ex=dayEx().filter(function(x){return x.id===art.dataset.ex})[0];
     if(ex) refresh(ex);
+  });
+
+  document.getElementById('day').addEventListener('click',function(e){
+    var drop=e.target.closest&&e.target.closest('[data-drop]');
+    if(drop){
+      var id=drop.getAttribute('data-drop');
+      store.extras[cur]=extrasFor(cur).filter(function(x){return x.id!==id});
+      store.updated=Date.now(); write(KEY,store); push(); render();
+      return;
+    }
+    if(e.target.id==='addbtn'){
+      var sel=document.getElementById('addpick'), nameEl2=document.getElementById('addname');
+      var name=(nameEl2.value||'').trim(), pick=sel.value;
+      if(!name && pick!=='' && pick!=='custom') name=RETIRED[+pick].name;
+      if(!name){ nameEl2.focus(); return; }
+      var sets=parseInt(document.getElementById('addsets').value,10)||3;
+      var low=parseInt(document.getElementById('addlow').value,10)||8;
+      var highRaw=document.getElementById('addhigh').value.trim();
+      var high=highRaw===''?null:(parseInt(highRaw,10)||low);
+      store.extras[cur]=extrasFor(cur).concat([{
+        id:'x'+Date.now().toString(36),name:name,kind:'acc',custom:true,
+        sets:Math.max(1,Math.min(20,sets)),low:low,high:high===null?low:Math.max(low,high),
+        amrap:high===null,tags:[['Added lift',0]]
+      }]);
+      store.updated=Date.now(); write(KEY,store); push(); render();
+    }
+  });
+
+  document.addEventListener('change',function(e){
+    if(e.target.id!=='addpick') return;
+    var v=e.target.value, n=document.getElementById('addname');
+    if(v===''||v==='custom'){ n.value=''; if(v==='custom') n.focus(); return; }
+    var r=RETIRED[+v];
+    n.value=r.name;
+    document.getElementById('addsets').value=r.sets;
+    document.getElementById('addlow').value=r.low;
+    document.getElementById('addhigh').value=r.high;
   });
 
   document.getElementById('tabs').addEventListener('click',function(e){
@@ -354,8 +448,8 @@ var API = '';
   });
 
   document.getElementById('save').addEventListener('click',function(){
-    var d=DAYS[cur], saved=0, today=new Date().toISOString().slice(0,10);
-    d.ex.forEach(function(ex){
+    var saved=0, today=new Date().toISOString().slice(0,10);
+    dayEx().forEach(function(ex){
       var sets=readSets(ex).filter(function(s){return s.w!==''&&s.r!==''});
       if(!sets.length) return;
       var sug=evaluate(ex,sets);
@@ -368,7 +462,7 @@ var API = '';
     }
     store.updated=Date.now();
     write(KEY,store);
-    d.ex.forEach(function(ex){for(var i=0;i<ex.sets;i++){delete draft[ex.id+'-'+i+'-w'];delete draft[ex.id+'-'+i+'-r'];}});
+    dayEx().forEach(function(ex){for(var i=0;i<ex.sets;i++){delete draft[ex.id+'-'+i+'-w'];delete draft[ex.id+'-'+i+'-r'];}});
     write(DRAFT,draft);
     push();
     render();
@@ -422,7 +516,7 @@ var API = '';
       .then(function(r){return r.json()})
       .then(function(d){
         if(d && d.store && d.store.history && (d.updated||0) >= (store.updated||0)){
-          store=d.store; if(!store.history) store.history={};
+          store=d.store; if(!store.history) store.history={}; if(!store.extras) store.extras={};
           draft=d.draft||draft;
           write(KEY,store); write(DRAFT,draft);
           render();
