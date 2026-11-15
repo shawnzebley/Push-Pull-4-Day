@@ -1,0 +1,252 @@
+<title>Program Editor</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: program picker on top, day tabs, then a stack of editable exercise rows */
+:root{--bg:#f5f6f4;--panel:#fff;--fg:#1b1e1c;--mute:#646b67;--line:#dde1de;--accent:#d2401f;--accent-ink:#fff;--main:#1f5f8b;--field:#f1f3f1;--danger:#b3261e;
+--display:'Barlow Condensed',Impact,'Arial Narrow',sans-serif;--body:Inter,system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141716;--panel:#1d211f;--fg:#e9ece9;--mute:#9aa29d;--line:#2f3532;--accent:#ff6a45;--accent-ink:#1a0b06;--main:#6fb3e3;--field:#262b28;--danger:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141716;--panel:#1d211f;--fg:#e9ece9;--mute:#9aa29d;--line:#2f3532;--accent:#ff6a45;--accent-ink:#1a0b06;--main:#6fb3e3;--field:#262b28;--danger:#ff8a80;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body)}
+.wrap{max-width:860px;margin:0 auto;padding-block:20px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+h1{font-family:var(--display);font-size:2rem;margin:0;letter-spacing:.02em;text-transform:uppercase}
+.lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);font-weight:600}
+.progs{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.prog{all:unset;cursor:pointer;background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:4px}
+.prog b{font-family:var(--display);font-size:1.35rem;text-transform:uppercase;letter-spacing:.02em}
+.prog span{font-size:.8rem;color:var(--mute)}
+.prog[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.prog:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.tab{all:unset;cursor:pointer;white-space:nowrap;padding:8px 14px;border-radius:999px;background:var(--field);font-weight:600;font-size:.85rem}
+.tab[aria-selected="true"]{background:var(--fg);color:var(--bg)}
+.dayhead{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.dayhead label{display:grid;gap:4px;flex:1 1 220px;min-width:0}
+input,select{font:inherit;color:var(--fg);background:var(--field);border:1px solid transparent;border-radius:6px;padding:8px 9px;min-width:0;width:100%;box-sizing:border-box}
+input:hover,select:hover{border-color:var(--line)}
+input[type=number]{font-variant-numeric:tabular-nums;text-align:center}
+.ex{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px}
+.ex.main{border-left:4px solid var(--main)}
+.row1{display:flex;gap:8px;align-items:center}
+.row1 .name{font-weight:600;font-size:1rem;flex:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}
+.grid label{display:grid;gap:3px}
+.checks{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem}
+.checks label{display:flex;gap:6px;align-items:center}
+.checks input{width:auto}
+.ib{all:unset;cursor:pointer;width:32px;height:32px;display:grid;place-items:center;border-radius:6px;color:var(--mute);font-size:1rem}
+.ib:hover{background:var(--field);color:var(--fg)}
+.ib.del:hover{color:var(--danger)}
+.ib:disabled{opacity:.3;cursor:default}
+.btn{all:unset;cursor:pointer;padding:10px 16px;border-radius:8px;font-weight:600;font-size:.9rem;text-align:center}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--field)}
+.btn.ghost{color:var(--danger)}
+.bar{display:flex;gap:8px;flex-wrap:wrap}
+.status{font-size:.8rem;color:var(--mute)}
+.changed{color:var(--accent);font-weight:600}
+textarea{width:100%;box-sizing:border-box;min-height:140px;font:12px/1.4 ui-monospace,monospace;background:var(--field);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px}
+.confirm{display:flex;gap:8px;align-items:center;font-size:.85rem;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.setup{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px}
+.setup ol{margin:0;padding-left:20px;display:grid;gap:4px;font-size:.9rem}
+.err{color:var(--danger);font-size:.85rem}
+.savebar{position:sticky;bottom:0;background:var(--bg);padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+body{margin:0}
+[hidden]{display:none!important}
+</style></head><body>
+
+<div class="wrap">
+  <header style="display:grid;gap:4px"><h1>Program Editor</h1><div class="status" id="status">Loading…</div></header>
+  <section class="setup" id="setup" hidden>
+    <b>Connect to GitHub (one time)</b>
+    <ol>
+      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a></li>
+      <li>Repository access: <b>Only select repositories</b> → Push-Pull-4-Day, glute-split, Bikini-Offseason-Programming</li>
+      <li>Permissions → Repository → <b>Contents: Read and write</b></li>
+      <li>Generate, copy, paste below.</li>
+    </ol>
+    <input id="tok" type="password" placeholder="github_pat_…" autocomplete="off">
+    <div class="bar"><button class="btn pri" id="saveTok">Connect</button></div>
+    <div class="err" id="tokErr"></div>
+  </section>
+  <div id="app" hidden style="display:grid;gap:18px">
+  <section style="display:grid;gap:8px"><div class="lbl">Program</div><div class="progs" id="progs"></div></section>
+  <section style="display:grid;gap:12px">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="dayhead" id="dayhead"></div>
+    <div id="exlist" style="display:grid;gap:10px"></div>
+    <div class="bar"><button class="btn sec" id="addEx">+ Add exercise</button></div>
+  </section>
+  <div class="savebar"><button class="btn pri" id="save">Save to live app</button><span id="resetWrap"></span><span class="status" id="saveMsg"></span></div>
+  <p class="status">Muscles: put * after a name to star it (e.g. "Glutes*, Hams"). Live app updates about a minute after saving. <button class="btn ghost" id="forget" style="padding:4px 0">Disconnect GitHub</button></p>
+  </div>
+</div>
+<script>
+const OWNER='shawnzebley';
+const PROGRAMS=[
+ {name:'Push/Pull 4-Day',repo:'Push-Pull-4-Day',path:'index.html',fmt:'pp'},
+ {name:'Glute Split',repo:'glute-split',path:'index.html',fmt:'dc'},
+ {name:'Bikini Offseason',repo:'Bikini-Offseason-Programming',path:'Index.html',fmt:'dc'}];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+let TOKEN=ls.get('pe-token'), cur=0, day=0, busy=false;
+const files=[]; // {text,sha,orig,days}
+
+// ---------- GitHub ----------
+async function gh(url,opt={}){
+  const r=await fetch('https://api.github.com/repos/'+OWNER+'/'+url,{...opt,headers:{Authorization:'Bearer '+TOKEN,Accept:'application/vnd.github+json',...(opt.headers||{})}});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok){const e=new Error(j.message||('HTTP '+r.status));e.status=r.status;throw e}
+  return j;
+}
+const dec=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g,'')),c=>c.charCodeAt(0)));
+function enc(s){const u=new TextEncoder().encode(s);let b='';for(let i=0;i<u.length;i+=32768)b+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(b)}
+async function getFile(p){
+  const meta=await gh(p.repo+'/contents/'+encodeURIComponent(p.path)+'?ref=main&t='+Date.now());
+  let text;
+  if(meta.content) text=dec(meta.content);
+  else{const b=await gh(p.repo+'/git/blobs/'+meta.sha);text=dec(b.content)}
+  return {text,sha:meta.sha};
+}
+
+// ---------- parse ----------
+const DC_A='buildDays() {', DC_B='resolveSets(';
+function parse(p,text){
+  if(p.fmt==='pp'){
+    const i=text.indexOf('var DAYS=['), j=text.indexOf('];',i)+1;
+    if(i<0||j<1) throw new Error('Could not find the program in '+p.repo);
+    const D=new Function('return '+text.slice(i+9,j))();
+    return D.map(d=>({tab:d.tab,title:d.title,loc:d.loc,ex:d.ex.map(e=>({...e,tags:(e.tags||[]).map(t=>({label:t[0],star:!!t[1]}))}))}));
+  }
+  const i=text.indexOf(DC_A), j=text.indexOf(DC_B,i);
+  if(i<0||j<0||text.indexOf(DC_A,i+1)>=0) throw new Error('Could not find the program in '+p.repo);
+  let body=text.slice(i+DC_A.length,j).replace(/\\\\u/g,'\\u').replace(/\\n/g,'\n').replace(/\\"/g,'"').replace(/\}\s*$/,'');
+  const D=new Function(body)();
+  return D.map(d=>({title:d.section,loc:d.location,ex:d.exercises.map(e=>({...e,tags:(e.tags||[]).map(t=>({label:t.label,type:t.type,star:!!t.star}))}))}));
+}
+
+// ---------- generate ----------
+function q(s,bs){return "'"+String(s).replace(/[^\x20-\x7e]|['"\\]/g,c=>bs+'u'+c.charCodeAt(0).toString(16).padStart(4,'0'))+"'"}
+function num(v){const n=parseInt(v,10);return isFinite(n)?n:0}
+function genPP(days){
+  const ex=e=>{let s=`{id:${q(e.id,'\\')},name:${q(e.name,'\\')},kind:${q(e.kind,'\\')},sets:${num(e.sets)}`;
+    if(e.amrap) s+=',amrap:true'; else s+=`,low:${num(e.low)},high:${num(e.high)}`;
+    if(e.each) s+=',each:true'; if(e.scheme) s+=`,scheme:${q(e.scheme,'\\')}`;
+    return s+`,tags:[${e.tags.map(t=>`[${q(t.label,'\\')},${t.star?1:0}]`).join(',')}]}`};
+  return 'var DAYS=[\n'+days.map(d=>`   {tab:${q(d.tab||d.title,'\\')}, title:${q(d.title,'\\')}, loc:${q(d.loc,'\\')}, ex:[\n`+d.ex.map(e=>'     '+ex(e)).join(',\n')+'\n   ]}').join(',\n')+'\n  ]';
+}
+function genDC(days){
+  const Q=s=>q(s,'\\\\'); // doubled backslash: code lives inside an escaped string
+  const ex=e=>`{ id: ${Q(e.id)}, name: ${Q(e.name)}, kind: ${Q(e.kind)}, sets: ${num(e.sets)}, low: ${num(e.low)}, high: ${num(e.high)}, each: ${!!e.each}, tags: [${e.tags.map(t=>`{ label: ${Q(t.label)}, type: ${Q(t.type||t.label.toLowerCase().replace(/[^a-z]/g,''))}${t.star?', star: true':''} }`).join(', ')}] }`;
+  const NL='\\n';
+  return NL+'    return ['+NL+days.map(d=>`      {${NL}        section: ${Q(d.title)}, location: ${Q(d.loc)},${NL}        exercises: [${NL}`+d.ex.map(e=>'          '+ex(e)+','+NL).join('')+`        ],${NL}      },${NL}`).join('')+'    ];'+NL+'  }'+NL+NL+'  ';
+}
+function build(p,text,days){
+  if(p.fmt==='pp'){const i=text.indexOf('var DAYS=['), j=text.indexOf('];',i)+1;return text.slice(0,i)+genPP(days)+text.slice(j)}
+  const i=text.indexOf(DC_A)+DC_A.length, j=text.indexOf(DC_B,i);return text.slice(0,i)+genDC(days)+text.slice(j);
+}
+
+// ---------- state ----------
+const draftKey=i=>'pe-draft-'+PROGRAMS[i].repo;
+function dirty(i){return files[i]&&JSON.stringify(files[i].days)!==files[i].orig}
+function persist(){const f=files[cur];if(dirty(cur))ls.set(draftKey(cur),JSON.stringify({sha:f.sha,days:f.days}));else ls.del(draftKey(cur));status()}
+function status(){const n=files.filter((_,i)=>dirty(i)).length;$('status').innerHTML=n?`<span class="changed">${n} program${n>1?'s':''} with unsaved changes</span>`:'All programs match the live app';renderProgs()}
+function tagStr(tags){return tags.map(t=>t.label+(t.star?'*':'')).join(', ')}
+function setTags(e,str){const old=Object.fromEntries(e.tags.map(t=>[t.label.toLowerCase(),t]));
+  e.tags=str.split(',').map(s=>s.trim()).filter(Boolean).map(s=>{const star=s.endsWith('*');const label=s.replace(/\*+$/,'').trim();const o=old[label.toLowerCase()];return {label,type:o&&o.type,star}})}
+
+// ---------- render ----------
+function renderProgs(){$('progs').innerHTML=PROGRAMS.map((p,i)=>{const f=files[i];return `<button class="prog" aria-pressed="${i===cur}" data-i="${i}"><b>${esc(p.name)}</b><span>${f?(f.err?'<span class="err">'+esc(f.err)+'</span>':`${f.days.length} days · ${f.days.reduce((a,d)=>a+d.ex.length,0)} exercises${dirty(i)?' · <span class="changed">edited</span>':''}`):'loading…'}</span></button>`}).join('')}
+function render(){
+  renderProgs(); renderReset();
+  const f=files[cur]; if(!f||f.err){$('tabs').innerHTML='';$('dayhead').innerHTML='';$('exlist').innerHTML=f?`<p class="err">${esc(f.err)}</p>`:'';return}
+  const P=f.days, pp=PROGRAMS[cur].fmt==='pp'; if(day>=P.length) day=P.length-1; const D=P[day];
+  $('tabs').innerHTML=P.map((d,i)=>`<button class="tab" role="tab" aria-selected="${i===day}" data-d="${i}">${esc(pp?d.tab:'Day '+(i+1))}</button>`).join('')+`<button class="tab" id="addDay">+ Day</button>`;
+  $('dayhead').innerHTML=(pp?`<label style="flex:0 1 120px"><span class="lbl">Tab</span><input id="dTab" value="${esc(D.tab)}"></label>`:'')+`<label><span class="lbl">Day name</span><input id="dTitle" value="${esc(D.title)}"></label>
+   <label style="flex:0 1 110px"><span class="lbl">Location</span><input id="dLoc" value="${esc(D.loc)}"></label>
+   <span id="dayDel"><button class="btn ghost" data-act="askDay">Delete day</button></span>`;
+  $('exlist').innerHTML=D.ex.map((e,i)=>`<div class="ex ${e.kind==='main'?'main':''}" data-x="${i}">
+    <div class="row1"><input class="name" data-f="name" value="${esc(e.name)}" aria-label="Exercise name">
+      <button class="ib" data-act="up" ${i===0?'disabled':''} aria-label="Move up">↑</button>
+      <button class="ib" data-act="down" ${i===D.ex.length-1?'disabled':''} aria-label="Move down">↓</button>
+      <button class="ib del" data-act="del" aria-label="Delete exercise">✕</button></div>
+    <div class="grid">
+      <label><span class="lbl">Type</span><select data-f="kind"><option value="main" ${e.kind==='main'?'selected':''}>Main</option><option value="acc" ${e.kind!=='main'?'selected':''}>Accessory</option></select></label>
+      <label><span class="lbl">Sets</span><input type="number" min="1" data-f="sets" value="${esc(e.sets)}"></label>
+      <label><span class="lbl">Reps low</span><input type="number" min="1" data-f="low" value="${esc(e.low)}" ${e.amrap?'disabled':''}></label>
+      <label><span class="lbl">Reps high</span><input type="number" min="1" data-f="high" value="${esc(e.high)}" ${e.amrap?'disabled':''}></label>
+    </div>
+    <label style="display:grid;gap:3px"><span class="lbl">Muscles</span><input data-f="tags" value="${esc(tagStr(e.tags))}"></label>
+    <div class="checks"><label><input type="checkbox" data-f="each" ${e.each?'checked':''}> Each side</label>${pp?`<label><input type="checkbox" data-f="amrap" ${e.amrap?'checked':''}> AMRAP</label>`:''}</div>
+  </div>`).join('')||'<p class="status">No exercises on this day. Add one below.</p>';
+}
+function renderReset(){$('resetWrap').innerHTML=dirty(cur)?'<button class="btn ghost" data-act="askReset">Discard edits</button>':''}
+
+document.addEventListener('click',async ev=>{
+  const t=ev.target.closest('button'); if(!t) return;
+  if(t.id==='saveTok'){TOKEN=$('tok').value.trim();if(!TOKEN)return;ls.set('pe-token',TOKEN);start();return}
+  if(t.id==='forget'){ls.del('pe-token');location.reload();return}
+  if(t.dataset.i!=null){cur=+t.dataset.i;day=0;$('saveMsg').textContent='';render();return}
+  const f=files[cur]; if(!f||f.err) return; const P=f.days, D=P[day];
+  if(t.dataset.d!=null){day=+t.dataset.d;render();return}
+  if(t.id==='save'){save();return}
+  if(t.id==='addDay'){P.push({tab:'Day '+(P.length+1),title:'New day',loc:'Gym',ex:[]});day=P.length-1;persist();render();return}
+  if(t.id==='addEx'){D.ex.push({id:'e'+Date.now().toString(36),name:'New exercise',kind:'acc',sets:3,low:9,high:12,each:false,tags:[]});persist();render();$('exlist').lastElementChild.querySelector('.name').select();return}
+  const a=t.dataset.act;
+  if(a==='askDay'){$('dayDel').innerHTML=`<span class="confirm">Delete "${esc(D.title)}"? <button class="btn ghost" data-act="delDay">Delete</button><button class="btn sec" data-act="cancel">Keep</button></span>`;return}
+  if(a==='delDay'){if(P.length>1){P.splice(day,1);day=Math.max(0,day-1);persist()}render();return}
+  if(a==='cancel'){render();return}
+  if(a==='askReset'){$('resetWrap').innerHTML=`<span class="confirm">Discard edits to ${esc(PROGRAMS[cur].name)}? <button class="btn ghost" data-act="reset">Discard</button><button class="btn sec" data-act="cancel">Keep</button></span>`;return}
+  if(a==='reset'){f.days=JSON.parse(f.orig);persist();render();return}
+  const card=t.closest('.ex'); if(!card) return; const i=+card.dataset.x;
+  if(a==='del') D.ex.splice(i,1); else if(a==='up') [D.ex[i-1],D.ex[i]]=[D.ex[i],D.ex[i-1]]; else if(a==='down') [D.ex[i+1],D.ex[i]]=[D.ex[i],D.ex[i+1]];
+  persist();render();
+});
+document.addEventListener('input',ev=>{
+  const el=ev.target, f=files[cur]; if(!f||!f.days) return; const D=f.days[day];
+  if(el.id==='dTitle'){D.title=el.value;persist();return} if(el.id==='dLoc'){D.loc=el.value;persist();return}
+  if(el.id==='dTab'){D.tab=el.value;persist();return}
+  const card=el.closest('.ex'); if(!card||!el.dataset.f) return; const e=D.ex[+card.dataset.x], k=el.dataset.f;
+  if(k==='tags') setTags(e,el.value); else e[k]=el.type==='checkbox'?el.checked:el.type==='number'?(el.value===''?'':+el.value):el.value;
+  persist(); if(k==='kind'||k==='amrap') render(); else renderReset();
+});
+
+async function save(){
+  if(busy) return; const p=PROGRAMS[cur], f=files[cur];
+  if(!dirty(cur)){$('saveMsg').textContent='Nothing to save.';return}
+  for(const d of f.days) for(const e of d.ex){ if(!e.name.trim()){$('saveMsg').innerHTML='<span class="err">An exercise has no name.</span>';return}
+    if(!e.amrap&&num(e.low)>num(e.high)){$('saveMsg').innerHTML=`<span class="err">${esc(e.name)}: low reps is above high reps.</span>`;return}}
+  busy=true; $('save').textContent='Saving…';
+  try{
+    const text=build(p,f.text,f.days);
+    const check=parse(p,text); // make sure the tracker can still read it
+    if(JSON.stringify(check.map(d=>d.ex.length))!==JSON.stringify(f.days.map(d=>d.ex.length))) throw new Error('Self-check failed, nothing was saved.');
+    const r=await gh(p.repo+'/contents/'+encodeURIComponent(p.path),{method:'PUT',body:JSON.stringify({message:'Update program from editor',content:enc(text),sha:f.sha,branch:'main'})});
+    f.text=text; f.sha=r.content.sha; f.orig=JSON.stringify(f.days); ls.del(draftKey(cur));
+    $('saveMsg').textContent='Saved. Live in about a minute.'; status(); renderReset();
+  }catch(e){
+    $('saveMsg').innerHTML='<span class="err">'+esc(e.status===409||e.status===422?'The live file changed since you opened it. Reload the page and redo the edit.':e.status===401||e.status===403?'GitHub rejected the token. Disconnect and reconnect with a new one.':e.message)+'</span>';
+  }finally{busy=false;$('save').textContent='Save to live app'}
+}
+
+async function start(){
+  if(!TOKEN){$('setup').hidden=false;$('app').hidden=true;$('status').textContent='Not connected';return}
+  $('setup').hidden=true;$('app').hidden=false;render();
+  await Promise.all(PROGRAMS.map(async(p,i)=>{
+    try{const {text,sha}=await getFile(p);const days=parse(p,text);const orig=JSON.stringify(days);
+      let d=null;try{d=JSON.parse(ls.get(draftKey(i)))}catch(e){}
+      files[i]={text,sha,orig,days:d&&d.sha===sha?d.days:days};
+    }catch(e){
+      if(e.status===401){ls.del('pe-token');TOKEN=null;$('tokErr').textContent='That token did not work. Make a new one.';}
+      files[i]={err:e.status===404?'No access to this repo with that token.':e.message};
+    }
+    render();
+  }));
+  if(!TOKEN){start();return}
+  status();
+}
+start();
+</script>
+</body></html>
